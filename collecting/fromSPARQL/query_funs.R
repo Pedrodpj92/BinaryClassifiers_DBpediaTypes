@@ -82,9 +82,7 @@ ask_properties_perResource <- function(resource, urlEndpoint, queryLimit){
   # print(resource)
   invalidCharacters <- c('%')#problems if we would have to add a whole japanise dictionary for instance
   
-  if(!resource %in% invalidCharacters){
-    
-    
+  if(!grepl(invalidCharacters, resource, fixed = TRUE)){
     queryParte1 <- paste0("
                           select distinct (",resource,") as ?s ?p ?o
                         where {
