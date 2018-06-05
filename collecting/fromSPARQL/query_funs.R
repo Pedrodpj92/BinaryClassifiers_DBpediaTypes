@@ -83,6 +83,8 @@ ask_properties_perResource <- function(resource, urlEndpoint, queryLimit){
   invalidCharacters <- c('%')#problems if we would have to add a whole japanise dictionary for instance
   
   if(!resource %in% invalidCharacters){
+    
+    
     queryParte1 <- paste0("
                           select distinct (",resource,") as ?s ?p ?o
                         where {
@@ -110,28 +112,29 @@ ask_properties_perResource <- function(resource, urlEndpoint, queryLimit){
     dt_results <- dt_auxiliar
     
     return(dt_results)
-  }
-  
-  ask_properties_iterative <- function(dt_resources, urlEndpoint, queryLimit){
-    #check types
-    
-    dt_auxiliar <- data.frame(t(c("s","p","o")))
-    colnames(dt_auxiliar) <- c("s","p","o")
-    for(i in 1:nrow(dt_resources)){
-      dt_auxiliar <- rbind(dt_auxiliar,ask_properties_perResource(as.character(dt_resources[i,1]),urlEndpoint,queryLimit))
-      print(paste0("resource number ",i))
-    }
-    dt_auxiliar <- dt_auxiliar[-1,]
-    dt_results <- dt_auxiliar
-    dt_results$s <- as.character(dt_results$s)
-    dt_results$s <- as.factor(dt_results$s)
-    return(dt_results)
   }else{
     dt_auxiliar <- data.frame(t(c("s","p","o")))
+    colnames(dt_auxiliar) <- c("s","p","o")
     dt_auxiliar <- dt_auxiliar[-1,]
     
     return(dt_auxiliar)
   }
+}
+
+ask_properties_iterative <- function(dt_resources, urlEndpoint, queryLimit){
+  #check types
+  
+  dt_auxiliar <- data.frame(t(c("s","p","o")))
+  colnames(dt_auxiliar) <- c("s","p","o")
+  for(i in 1:nrow(dt_resources)){
+    dt_auxiliar <- rbind(dt_auxiliar,ask_properties_perResource(as.character(dt_resources[i,1]),urlEndpoint,queryLimit))
+    print(paste0("resource number ",i))
+  }
+  dt_auxiliar <- dt_auxiliar[-1,]
+  dt_results <- dt_auxiliar
+  dt_results$s <- as.character(dt_results$s)
+  dt_results$s <- as.factor(dt_results$s)
+  return(dt_results) 
 }
 
 ask_properties <- function(classType, numberRequest, urlEndpoint, queryLimit){

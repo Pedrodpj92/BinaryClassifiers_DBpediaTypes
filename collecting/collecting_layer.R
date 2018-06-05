@@ -50,8 +50,8 @@ collecting_layer <- function(positiveClass, numberPositiveCases,
     stop(paste0("Error, numberNegativeCases and negativeClasses should have the same number of elements: ",
                 numberNegativeCases," // ",negativeClasses), call.=FALSE)
   }
-  negative_types <- vector("list",numberNegativeCases)
-  negative_properties <- vector("list",numberNegativeCases)
+  negative_types <- vector("list",length(numberNegativeCases))
+  negative_properties <- vector("list",length(numberNegativeCases))
   for(i in 1:length(numberNegativeCases)){
     negative_types[[i]] <- ask_resources(negativeClasses[[i]], numberNegativeCases[[i]], urlEndpoint, queryLimit)
     negative_properties[[i]] <- ask_properties(negativeClasses[[i]], numberNegativeCases[[i]], urlEndpoint, queryLimit) 
