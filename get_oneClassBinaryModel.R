@@ -16,23 +16,17 @@ source(paste(getwd(),"/modeling/modeling_layer.R",sep=""))
 # - numberNegativeCases (List <integer>)
 # - numberOfRequest (integer)
 # - URL's endpoint SPARQL (String)
+# - queryLimit (integer), it would be wonderful have something like configuration settings, to give this values
 
 #Exceptions
-# - No data collected (from any query)
-# - Number of cases (positive either negative) must be greater than 0
-#(if numberPositiveCases<1 || sum(numberNegativeCases)<0 then trhows ex)
+# - NumberOfRequest must be an integer
 # - Number of request must be greater than 1
 #(if numberOfRequest<1 then throws ex)
 
-#Warnings
-# - Data collected less than request (either positive or some negative)
-
 #Return
-# - Reference to trained model with metrics (H2O model object)
+# - Reference to each phase outputs (list with lists with several and heterogeneous objects)
 # - Print input parameters and output metrics (accuracy, precision and recall, maybe f-measure too)
 
-#Notes
-# Class Strings should include "less than" and "greater than" symbols (<URI>)
 
 ###################
 #@@@ collecting; from SPARQL
@@ -65,11 +59,14 @@ source(paste(getwd(),"/modeling/modeling_layer.R",sep=""))
 
 get_oneClassBinaryModel <- function(positiveClass, numberPositiveCases,
                                     negativeClasses, numberNegativeCases,
-                                    numberOfRequest, urlEndpoint){
-  if(!is.integer(numberOfRequest)){
-    stop(paste0("Error, numberOfRequest should be an integer: ",numberOfRequest), call.=FALSE)
+                                    numberOfRequest, urlEndpoint, queryLimit#,randomSeed
+){
+  if(!is.numeric(numberOfRequest)){
+    if(!numberOfRequest%%1==0){
+      stop(paste0("Error, numberOfRequest should be an integer: ",numberOfRequest), call.=FALSE)
+    }
   }
-  if(!numberOfRequest<1){
+  if(numberOfRequest<1){
     stop(paste0("Error, numberOfRequest should be greater than 0: ",numberOfRequest), call.=FALSE)
   }
   stackRequest <- vector("list",numberOfRequest)
@@ -81,7 +78,7 @@ get_oneClassBinaryModel <- function(positiveClass, numberPositiveCases,
     #phase 1
     data_collected <- collecting_layer(positiveClass, numberPositiveCases,
                                        negativeClasses, numberNegativeCases,
-                                       urlEndpoint)
+                                       urlEndpoint, queryLimit)
     positive_types <- data_collected[[1]]
     positive_properties <- data_collected[[2]]
     negative_types <- data_collected[[3]]
@@ -94,7 +91,7 @@ get_oneClassBinaryModel <- function(positiveClass, numberPositiveCases,
     
     print(paste0(Sys.time()," -> starting modeling phase"))
     #phase 3
-    trainedModel <- modeling_layer(learningSet,i)
+    trainedModel <- modeling_layer(learningSet,i,1234)
     
     #save iteration data and results
     aux_listStepCover <- vector("list",3)

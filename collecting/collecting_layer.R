@@ -2,15 +2,18 @@
 
 source(paste(getwd(),"/collecting/fromSPARQL/query_funs.R",sep=""))
 
-#Description:
+#Description
 #Layer focused on retrieve data about classes (types) requested, both positive and negative ones.
 
-#Input:
+#Input
 # - positiveClass (String)
 # - numberPositiveCases (integer)
 # - negativeClasses (List <String>)
 # - numberNegativeCases (List <integer>)
 # - URL's endpoint SPARQL (String)
+
+#Output
+# - queryResults: list with every result get from queries as data frames
 
 #Exceptions
 # - Non proper parameter types
@@ -30,15 +33,17 @@ collecting_layer <- function(positiveClass, numberPositiveCases,
   
   
   #Estos e deberia comprobar en las funciones, cuando se puede comprobar que es un entero, no una lista
-  if(!is.integer(numberPositiveCases) || !is.integer(numberNegativeCases)){
-    stop(paste0("Error, numberPositiveCases and numberNegativeCases should be integer: ",numberOfRequest), call.=FALSE)
+  if(!is.numeric(numberPositiveCases)){# || !is.numeric(numberNegativeCases)){
+    if(!numberPositiveCases%%1==0){# || !numberNegativeCases%%1==0){ this is a list, must be checked in a different way
+      stop(paste0("Error, numberPositiveCases and numberNegativeCases should be integer: ",numberOfRequest), call.=FALSE)
+    }
   }
-  if(numberPositiveCases<1 || numberPositiveCases){
+  if(numberPositiveCases<1){# || numberPositiveCases){ 
     stop(paste0("Error, numberOfRequest should be greater than 0: ",numberOfRequest), call.=FALSE)  
   }
   
   
-  positive_types <- ask_types(positiveClass, numberPositiveCases, urlEndpoint, queryLimit)
+  positive_types <- ask_resources(positiveClass, numberPositiveCases, urlEndpoint, queryLimit)
   positive_properties <- ask_properties(positiveClass, numberPositiveCases, urlEndpoint, queryLimit)
   
   if(length(numberNegativeCases)!=length(negativeClasses)){
@@ -48,7 +53,7 @@ collecting_layer <- function(positiveClass, numberPositiveCases,
   negative_types <- vector("list",numberNegativeCases)
   negative_properties <- vector("list",numberNegativeCases)
   for(i in 1:length(numberNegativeCases)){
-    negative_types[[i]] <- ask_types(negativeClasses[[i]], numberNegativeCases[[i]], urlEndpoint, queryLimit)
+    negative_types[[i]] <- ask_resources(negativeClasses[[i]], numberNegativeCases[[i]], urlEndpoint, queryLimit)
     negative_properties[[i]] <- ask_properties(negativeClasses[[i]], numberNegativeCases[[i]], urlEndpoint, queryLimit) 
   }
   
