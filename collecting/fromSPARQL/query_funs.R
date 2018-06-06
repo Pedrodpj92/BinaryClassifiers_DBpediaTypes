@@ -10,60 +10,84 @@
 
 
 
-ask_resources <- function(classType, numberRequest, urlEndpoint, queryLimit){
+ask_resources <- function(classType, offsetInitial, numberRequest, urlEndpoint, queryLimit){
+  
   library(SPARQL)
-  if(!is.character(classType) || !is.numeric(numberRequest) || !is.character(urlEndpoint) || !is.numeric(queryLimit)){
+  if(!is.character(classType)|| !is.numeric(offsetInitial) || !is.numeric(numberRequest) || !is.character(urlEndpoint) || !is.numeric(queryLimit)){
     stop(paste0("Error, parameter types are not correct"), call.=FALSE)
   }
   #in case of would be real numbers instance of integers
   numberRequest <- round(numberRequest)
   queryLimit <- round(queryLimit)
   
+  print(paste0("quering about DBpedia type: ",classType))
   #pagination, SPARQL as maximun returns queryLimit elements so offset and limit query modifiers are needed.
-  if(numberRequest<queryLimit){
-    stringQuery <- paste0("
-                    select distinct ?s (<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>) as ?p (",classType,") as ?o
-                    where {
-                    ?s a ", classType," .
-                    } limit ",numberRequest)
-    qd <- SPARQL(urlEndpoint,stringQuery)
-    dt_results <- qd$results
-  }else{
-    queryParte1 <- paste0("
+  queryParte1 <- paste0("
                     select distinct ?s (<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>) as ?p (",classType,") as ?o
                     where {
                     ?s a ",classType," .
                     } OFFSET ")
+  
+  queryParte2 <- paste0(" LIMIT ",queryLimit)
+  i <- 0
+  comprobador <- data.frame(t(c("s","p","o")))
+  dt_auxiliar <- data.frame(t(c("s","p","o")))
+  colnames(dt_auxiliar) <- c("s","p","o")
+  remainingLines <- numberRequest
+  while(nrow(comprobador)!=0 && (i*queryLimit)<numberRequest){
+    print("starting loop")
+    qd <- SPARQL(urlEndpoint,paste0(queryParte1,
+                                    as.character(offsetInitial+i*queryLimit), #each iteration gets queryLimit
+                                    queryParte2))
+    comprobador <- qd$results
+    dt_auxiliar <- rbind(dt_auxiliar,qd$results)
+    i <- i+1
+    remainingLines <- remainingLines-queryLimit
+    print(paste0("ending iteration pagination query ",i))
+    Sys.sleep(1)#endpoint common particularities
+  }
+  
+
+  
+  #deleting first dummy row
+  dt_auxiliar <- dt_auxiliar[-1,]
+  dt_results <- dt_auxiliar
+  if(remainingLines<0 && (nrow(dt_results)+remainingLines)>0){
+    dt_results <- head(dt_results,remainingLines)#remove last lines which are more than requested
     
-    queryParte2 <- paste0(" LIMIT ",queryLimit)
-    i <- 0
-    comprobador <- data.frame(t(c("s","p","o")))
-    dt_auxiliar <- data.frame(t(c("s","p","o")))
-    colnames(dt_auxiliar) <- c("s","p","o")
-    remainingLines <- numberRequest
-    while(nrow(comprobador)!=0 && (i*queryLimit)<numberRequest){
-      print("starting loop")
-      qd <- SPARQL(urlEndpoint,paste0(queryParte1,
-                                      as.character(i*queryLimit), #each iteration gets queryLimit
-                                      queryParte2))
-      comprobador <- qd$results
-      dt_auxiliar <- rbind(dt_auxiliar,qd$results)
-      i <- i+1
-      remainingLines <- remainingLines-queryLimit
-      print(paste0("ending iteration pagination query ",i))
-      Sys.sleep(1)#endpoint common particularities
-    }
-    #deleting first dummy row
-    dt_auxiliar <- dt_auxiliar[-1,]
-    dt_results <- dt_auxiliar
-    if(remainingLines<0){
-      dt_results <- head(dt_results,remainingLines)#remove last lines which are more than requested
+    print("enter in bad condition")
+    print(nrow(dt_results))
+    print(remainingLines)
+    
+  }
+  
+  print(nrow(dt_results))
+  
+  dropOut_problematiChars <- c('%')#this list can be bigger, some checks must be done with curl, like use '$'
+  dt_results_reduced <- dt_results
+  if(!nrow(dt_results)<1){
+    for(i in 1:length(dropOut_problematiChars)){
+      dt_results_reduced <- dt_results_reduced[!(grepl(dropOut_problematiChars[i],dt_results_reduced[,1], fixed = TRUE)),]
     }
   }
+
+  
+  if(nrow(dt_results_reduced)<nrow(dt_results)){#recursive function, in order to obtain the exact
+
+    new_requestedResources <- nrow(dt_results)-nrow(dt_results_reduced)
+    new_initialOffset <- nrow(dt_results)+offsetInitial
+    print(paste0("some bad resources found, getting more, exactly: ",new_requestedResources))
+    more_resources <- ask_resources(classType, new_initialOffset, new_requestedResources, urlEndpoint, queryLimit)
+    dt_results <- rbind(dt_results, more_resources)
+  }
+  
   
   if(nrow(dt_results)<numberRequest){
     warning(paste0("requested ",numberRequest," results but only were retrieved ",nrow(dt_results)," results"))  
   }
+  
+  print(paste0("found resources beloging to type ",dt_results[1,3]," :"))
+  print(dt_results[,1])
   
   return(dt_results)
 }
@@ -114,13 +138,14 @@ ask_properties_perResource <- function(resource, urlEndpoint, queryLimit){
     dt_auxiliar <- data.frame(t(c("s","p","o")))
     colnames(dt_auxiliar) <- c("s","p","o")
     dt_auxiliar <- dt_auxiliar[-1,]
-    
+    print("improper resource, skipping query")
     return(dt_auxiliar)
   }
 }
 
 ask_properties_iterative <- function(dt_resources, urlEndpoint, queryLimit){
   #check types
+  print("asking properties per resource")
   
   dt_auxiliar <- data.frame(t(c("s","p","o")))
   colnames(dt_auxiliar) <- c("s","p","o")
@@ -135,10 +160,18 @@ ask_properties_iterative <- function(dt_resources, urlEndpoint, queryLimit){
   return(dt_results) 
 }
 
-ask_properties <- function(classType, numberRequest, urlEndpoint, queryLimit){
+# ask_properties <- function(classType, numberRequest, urlEndpoint, queryLimit){
+#   #some cheks should be done
+#   
+#   resourcesCollected <- ask_resources(classType, numberRequest, urlEndpoint, queryLimit)
+#   relatedPredicatesCollected <- ask_properties_iterative(resourcesCollected, urlEndpoint, queryLimit)
+#   
+#   return(relatedPredicatesCollected)
+# }
+
+#in this version, resourcesCollected are passed by parameter, replace classType
+ask_properties <- function(resourcesCollected, urlEndpoint, queryLimit){
   #some cheks should be done
-  
-  resourcesCollected <- ask_resources(classType, numberRequest, urlEndpoint, queryLimit)
   relatedPredicatesCollected <- ask_properties_iterative(resourcesCollected, urlEndpoint, queryLimit)
   
   return(relatedPredicatesCollected)

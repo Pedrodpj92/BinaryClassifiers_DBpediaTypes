@@ -43,8 +43,9 @@ collecting_layer <- function(positiveClass, numberPositiveCases,
   }
   
   
-  positive_types <- ask_resources(positiveClass, numberPositiveCases, urlEndpoint, queryLimit)
-  positive_properties <- ask_properties(positiveClass, numberPositiveCases, urlEndpoint, queryLimit)
+  positive_types <- ask_resources(positiveClass, 0, numberPositiveCases, urlEndpoint, queryLimit)
+  # positive_properties <- ask_properties(positiveClass, numberPositiveCases, urlEndpoint, queryLimit) #OLD version
+  positive_properties <- ask_properties(positive_types, urlEndpoint, queryLimit)
   
   if(length(numberNegativeCases)!=length(negativeClasses)){
     stop(paste0("Error, numberNegativeCases and negativeClasses should have the same number of elements: ",
@@ -53,15 +54,20 @@ collecting_layer <- function(positiveClass, numberPositiveCases,
   negative_types <- vector("list",length(numberNegativeCases))
   negative_properties <- vector("list",length(numberNegativeCases))
   for(i in 1:length(numberNegativeCases)){
-    negative_types[[i]] <- ask_resources(negativeClasses[[i]], numberNegativeCases[[i]], urlEndpoint, queryLimit)
-    negative_properties[[i]] <- ask_properties(negativeClasses[[i]], numberNegativeCases[[i]], urlEndpoint, queryLimit) 
+    negative_types[[i]] <- ask_resources(negativeClasses[[i]], 0, numberNegativeCases[[i]], urlEndpoint, queryLimit)
+    negative_properties[[i]] <- ask_properties(negative_types[[i]], urlEndpoint, queryLimit) 
   }
   
-  queryResults <- vector("list",4)
-  queryResults[[1]] <- positive_types
-  queryResults[[2]] <- positive_properties
-  queryResults[[3]] <- negative_types
-  queryResults[[4]] <- negative_properties
+  # queryResults <- vector("list",4)
+  queryResults <- list()
+  # queryResults[[1]] <- positive_types
+  # queryResults[[2]] <- positive_properties
+  # queryResults[[3]] <- negative_types
+  # queryResults[[4]] <- negative_properties
+  queryResults$positive_resources <- positive_types
+  queryResults$positive_properties <- positive_properties
+  queryResults$negative_resources <- negative_types
+  queryResults$negative_properties <- negative_properties
   
   return(queryResults)
 }

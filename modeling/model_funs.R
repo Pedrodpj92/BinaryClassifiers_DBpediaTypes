@@ -26,6 +26,6 @@ simpleRandomForest <- function(dt_data, id_model, randomSeed){
   # no disk acces for now
   # h2o.saveModel(rf_model, path=paste(getwd(),"/someModelsHoliday/",sep=""))
   
-  return(trainedModel)
+  return(rf_model)
 }
 

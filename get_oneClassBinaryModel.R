@@ -94,10 +94,15 @@ get_oneClassBinaryModel <- function(positiveClass, numberPositiveCases,
     trainedModel <- modeling_layer(learningSet,i,1234)
     
     #save iteration data and results
-    aux_listStepCover <- vector("list",3)
-    aux_listStepCover[[1]] <- data_collected
-    aux_listStepCover[[2]] <- learningSet
-    aux_listStepCover[[3]] <- trainedModel
+    # aux_listStepCover <- vector("list",3)
+    # aux_listStepCover[[1]] <- data_collected
+    # aux_listStepCover[[2]] <- learningSet
+    # aux_listStepCover[[3]] <- trainedModel
+    
+    aux_listStepCover <- list()
+    aux_listStepCover$data_collected <- data_collected
+    aux_listStepCover$learningSet <- learningSet
+    aux_listStepCover$trainedModel <- trainedModel
     stackRequest[[i]] <- aux_listStepCover
     print(paste0(Sys.time()," -> ending request number ",i))
   }

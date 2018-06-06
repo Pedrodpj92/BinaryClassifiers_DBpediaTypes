@@ -37,7 +37,8 @@ preprocessing_layer <- function(positive_types, positive_properties,
   #adding class
   learning_Matriz$Class <- 0
   learning_Matriz[learning_Matriz$s %in% positiveResources$Var1,]$Class <- 1
-  
+  learning_Matriz$Class <- as.character(learning_Matriz$Class)
+  learning_Matriz$Class <- as.factor(learning_Matriz$Class)
   
   return(learning_Matriz)
 }
