@@ -86,8 +86,8 @@ ask_resources <- function(classType, offsetInitial, numberRequest, urlEndpoint, 
     warning(paste0("requested ",numberRequest," results but only were retrieved ",nrow(dt_results)," results"))  
   }
   
-  print(paste0("found resources beloging to type ",dt_results[1,3]," :"))
-  print(dt_results[,1])
+  # print(paste0("found resources beloging to type ",dt_results[1,3]," :"))
+  # print(dt_results[,1])
   
   return(dt_results)
 }
