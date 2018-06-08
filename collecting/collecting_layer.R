@@ -42,20 +42,45 @@ collecting_layer <- function(positiveClass, numberPositiveCases,
     stop(paste0("Error, numberOfRequest should be greater than 0: ",numberOfRequest), call.=FALSE)  
   }
   
-  
+  #about resources
   positive_types <- ask_resources(positiveClass, 0, numberPositiveCases, urlEndpoint, queryLimit)
-  # positive_properties <- ask_properties(positiveClass, numberPositiveCases, urlEndpoint, queryLimit) #OLD version
-  positive_properties <- ask_properties(positive_types, urlEndpoint, queryLimit)
   
   if(length(numberNegativeCases)!=length(negativeClasses)){
     stop(paste0("Error, numberNegativeCases and negativeClasses should have the same number of elements: ",
                 numberNegativeCases," // ",negativeClasses), call.=FALSE)
   }
+  
+  
   negative_types <- vector("list",length(numberNegativeCases))
+  # for(i in 1:length(numberNegativeCases)){
+  #   negative_types[[i]] <- ask_resources(negativeClasses[[i]], 0, numberNegativeCases[[i]], urlEndpoint, queryLimit)
+  #   negative_properties[[i]] <- ask_properties(negative_types[[i]], urlEndpoint, queryLimit) 
+  # }
+  
+  #this loop is divided in order to retrieve all resources first, in case of there would be some problem on them
+  for(i in 1:length(numberNegativeCases)){
+    print(paste0("let's ask ",numberNegativeCases[[i]]," resources about ",negativeClasses[[i]]," type"))
+    print(paste0("other parameter queryLimit: ",queryLimit))
+    negative_types[[i]] <- ask_resources(negativeClasses[[i]], 0, numberNegativeCases[[i]], urlEndpoint, queryLimit)
+  }
+  
+  #about properties
+  # positive_properties <- ask_properties(positiveClass, numberPositiveCases, urlEndpoint, queryLimit) #OLD version
+  if(nrow(positive_types)>1){
+    positive_properties <- ask_properties(positive_types, urlEndpoint, queryLimit)
+  }else{
+    stop(paste0("Error, resources with positive Class ",positiveClass," have not been found"), call.=FALSE)
+  }
+  
+  
   negative_properties <- vector("list",length(numberNegativeCases))
   for(i in 1:length(numberNegativeCases)){
-    negative_types[[i]] <- ask_resources(negativeClasses[[i]], 0, numberNegativeCases[[i]], urlEndpoint, queryLimit)
-    negative_properties[[i]] <- ask_properties(negative_types[[i]], urlEndpoint, queryLimit) 
+    if(nrow(negative_types[[i]])>1){
+      negative_properties[[i]] <- ask_properties(negative_types[[i]], urlEndpoint, queryLimit) 
+    }else{
+      warning(paste0("Warning, resources with negative Class ",negativeClasses[[i]]," have not been found. ",
+                     "Would be enought with the rest of negative cases? Please, considerer it"))
+    }
   }
   
   # queryResults <- vector("list",4)

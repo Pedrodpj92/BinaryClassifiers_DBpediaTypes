@@ -17,6 +17,7 @@ source(paste(getwd(),"/modeling/modeling_layer.R",sep=""))
 # - numberOfRequest (integer)
 # - URL's endpoint SPARQL (String)
 # - queryLimit (integer), it would be wonderful have something like configuration settings, to give this values
+# - domain_propertiesURI (string), optional, string filter to grep some specific properties, for instance, only belonging to DBpedia ontology
 
 #Exceptions
 # - NumberOfRequest must be an integer
@@ -59,7 +60,7 @@ source(paste(getwd(),"/modeling/modeling_layer.R",sep=""))
 
 get_oneClassBinaryModel <- function(positiveClass, numberPositiveCases,
                                     negativeClasses, numberNegativeCases,
-                                    numberOfRequest, urlEndpoint, queryLimit#,randomSeed
+                                    numberOfRequest, urlEndpoint, queryLimit,domain_propertiesURI=NULL#,randomSeed
 ){
   if(!is.numeric(numberOfRequest)){
     if(!numberOfRequest%%1==0){
@@ -86,8 +87,13 @@ get_oneClassBinaryModel <- function(positiveClass, numberPositiveCases,
     
     print(paste0(Sys.time()," -> starting preprocessing phase"))
     #phase 2
-    learningSet <- preprocessing_layer(positive_types, positive_properties,
-                                       negative_types, negative_properties)
+    if(!is.null(domain_propertiesURI)){
+      learningSet <- preprocessing_layer(positive_types, positive_properties,
+                                         negative_types, negative_properties,domain_propertiesURI)
+    }else{
+      learningSet <- preprocessing_layer(positive_types, positive_properties,
+                                         negative_types, negative_properties)
+    }
     
     print(paste0(Sys.time()," -> starting modeling phase"))
     #phase 3

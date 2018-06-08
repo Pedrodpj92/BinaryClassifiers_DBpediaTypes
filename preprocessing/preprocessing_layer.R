@@ -22,7 +22,7 @@ source(paste(getwd(),"/preprocessing/convert_funs.R",sep=""))
 
 
 preprocessing_layer <- function(positive_types, positive_properties,
-                                negative_types, negative_properties){
+                                negative_types, negative_properties,domain_propertiesURI=NULL){
   
   stackedNegativeProperties <- vector('list',length(negative_properties))
   for(i in 1:length(negative_properties)){
@@ -31,8 +31,12 @@ preprocessing_layer <- function(positive_types, positive_properties,
   
   properties <- rbind(positive_properties,stackedNegativeProperties)
   positiveResources <- data.frame(table(positive_properties$s))
+  if(!is.null(domain_propertiesURI)){
+    learning_Matriz <- properties_toColumns(properties,domain_propertiesURI)
+  }else{
+    learning_Matriz <- properties_toColumns(properties)
+  }
   
-  learning_Matriz <- properties_toColumns(properties)
   
   #adding class
   learning_Matriz$Class <- 0

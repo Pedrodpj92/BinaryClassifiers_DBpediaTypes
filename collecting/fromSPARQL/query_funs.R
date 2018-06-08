@@ -19,8 +19,14 @@ ask_resources <- function(classType, offsetInitial, numberRequest, urlEndpoint, 
   #in case of would be real numbers instance of integers
   numberRequest <- round(numberRequest)
   queryLimit <- round(queryLimit)
-  
-  print(paste0("quering about DBpedia type: ",classType))
+  if(numberRequest<queryLimit){
+    queryLimit <- numberRequest
+  }
+  print("")
+  print("")
+  print("starting ask_resources function")
+  print("")
+  print(paste0("quering about DBpedia type: ",classType, " a total of ",numberRequest))
   #pagination, SPARQL as maximun returns queryLimit elements so offset and limit query modifiers are needed.
   queryParte1 <- paste0("
                     select distinct ?s (<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>) as ?p (",classType,") as ?o
@@ -34,16 +40,37 @@ ask_resources <- function(classType, offsetInitial, numberRequest, urlEndpoint, 
   dt_auxiliar <- data.frame(t(c("s","p","o")))
   colnames(dt_auxiliar) <- c("s","p","o")
   remainingLines <- numberRequest
+  # print(paste0("remainingLines anterior: ",remainingLines))
   while(nrow(comprobador)!=0 && (i*queryLimit)<numberRequest){
     print("starting loop")
+    # print("doing next query:")
+    # print(paste0(queryParte1,
+    #              as.character(offsetInitial+i*queryLimit), #each iteration gets queryLimit
+    #              queryParte2))
     qd <- SPARQL(urlEndpoint,paste0(queryParte1,
                                     as.character(offsetInitial+i*queryLimit), #each iteration gets queryLimit
                                     queryParte2))
+    # print("")
+    # print(paste0("query done: "))
+    # print("")
+    # print(paste0(queryParte1,
+    #              as.character(offsetInitial+i*queryLimit), #each iteration gets queryLimit
+    #              queryParte2))
+    # print("")
+    
+    
     comprobador <- qd$results
     dt_auxiliar <- rbind(dt_auxiliar,qd$results)
     i <- i+1
     remainingLines <- remainingLines-queryLimit
-    print(paste0("ending iteration pagination query ",i))
+    # print("")
+    # print(paste0("printing variables values: "))
+    # print(paste0("offsetInitial: ",offsetInitial))
+    # print(paste0("i: ",i))
+    # print(paste0("queryLimit: ",queryLimit))
+    # print(paste0("remainingLines posterior: ",remainingLines))
+    print("")
+    print(paste0("ending iteration pagination query ",i," retrieved ",nrow(comprobador)," resources"))
     Sys.sleep(1)#endpoint common particularities
   }
   
@@ -52,18 +79,27 @@ ask_resources <- function(classType, offsetInitial, numberRequest, urlEndpoint, 
   #deleting first dummy row
   dt_auxiliar <- dt_auxiliar[-1,]
   dt_results <- dt_auxiliar
-  if(remainingLines<0 && (nrow(dt_results)+remainingLines)>0){
+  
+  #first if is when we page several resources (more than 10K as maximum per query) and we need to delete some of last query
+  getJustOneIf <- FALSE #really, grep another better example
+  if(remainingLines<0 && (nrow(dt_results)+remainingLines)>0 && !getJustOneIf){
     dt_results <- head(dt_results,remainingLines)#remove last lines which are more than requested
-    
-    print("enter in bad condition")
-    print(nrow(dt_results))
-    print(remainingLines)
-    
+    print(paste0("droping out excess of resources requested, now there are ",nrow(dt_results)))
+    # print("enter in bad condition")
+    # print(nrow(dt_results))
+    # print(remainingLines)
+    getJustOneIf <- TRUE
+  }
+  #this another if is when dt_results is more than request and there were not pagination needed
+  if(numberRequest<nrow(dt_results) && !getJustOneIf){
+    dt_results <- head(dt_results,numberRequest)
+    print(paste0("droping out excess of resources requested, now there are ",nrow(dt_results)))
   }
   
-  print(nrow(dt_results))
+  # print(nrow(dt_results))
   
   dropOut_problematiChars <- c('%')#this list can be bigger, some checks must be done with curl, like use '$'
+  #there are some encode characteres with problems with RCurl, must check
   dt_results_reduced <- dt_results
   if(!nrow(dt_results)<1){
     for(i in 1:length(dropOut_problematiChars)){
@@ -72,21 +108,30 @@ ask_resources <- function(classType, offsetInitial, numberRequest, urlEndpoint, 
   }
 
   
-  if(nrow(dt_results_reduced)<nrow(dt_results)){#recursive function, in order to obtain the exact
+  if(nrow(dt_results_reduced)<nrow(dt_results) && nrow(dt_results_reduced)>0){#recursive function, in order to obtain the exact
 
+    # print("")
+    # print(paste0("les do some recursivity..."))
+    # print("")
+    # print(paste0("nrow(dt_results) --> ", nrow(dt_results)))
+    # print(paste0("nrow(dt_results_reduced) --> ", nrow(dt_results_reduced)))
+    # print("")
     new_requestedResources <- nrow(dt_results)-nrow(dt_results_reduced)
+    # print(paste0("new_requestedResources --> ", new_requestedResources))
+    # print("")
     new_initialOffset <- nrow(dt_results)+offsetInitial
-    print(paste0("some bad resources found, getting more, exactly: ",new_requestedResources))
+    print(paste0("queried ",nrow(dt_results)," resources belonging to type: ",classType))
+    print(paste0("some bad resources found, trying to get more, exactly: ",new_requestedResources))
     more_resources <- ask_resources(classType, new_initialOffset, new_requestedResources, urlEndpoint, queryLimit)
     dt_results <- rbind(dt_results, more_resources)
   }
   
   
   if(nrow(dt_results)<numberRequest){
-    warning(paste0("requested ",numberRequest," results but only were retrieved ",nrow(dt_results)," results"))  
+    warning(paste0("Warning, requested ",numberRequest," results but only were retrieved ",nrow(dt_results)," results"))  
   }
   
-  # print(paste0("found resources beloging to type ",dt_results[1,3]," :"))
+  # print(paste0("found resources belonging to type ",dt_results[1,3]," :"))
   # print(dt_results[,1])
   
   return(dt_results)
@@ -104,9 +149,20 @@ ask_properties_perResource <- function(resource, urlEndpoint, queryLimit){
   # print(resource)
   # resource <- gsub(pattern = '%', replacement = "", x = resource, fixed = TRUE)
   # print(resource)
-  invalidCharacters <- c('%')#problems if we would have to add a whole japanise dictionary for instance
   
+  invalidCharacters <- c('%')#problems if we would have to add a whole japanise dictionary for example
+  # invalidCharacters <- c('NA','%E2%80%93')
+  #http://dbpedia.org/resource/Jefferson%E2%80%93Jackson_Day
+  # invalidCharacteresFound <- FALSE
+  # for(i in 1:length(invalidCharacters)){
+  #   if(!grepl(invalidCharacters[i], resource, fixed = TRUE)){
+  #     invalidCharacteresFound <- TRUE
+  #   }
+  # }
+  print(resource)
+  # if(!invalidCharacteresFound){
   if(!grepl(invalidCharacters, resource, fixed = TRUE)){
+    
     queryParte1 <- paste0("
                           select distinct (",resource,") as ?s ?p ?o
                         where {
@@ -145,13 +201,16 @@ ask_properties_perResource <- function(resource, urlEndpoint, queryLimit){
 
 ask_properties_iterative <- function(dt_resources, urlEndpoint, queryLimit){
   #check types
-  print("asking properties per resource")
+  print(paste0("asking properties per resource belonging to type ",dt_resources[1,3]))
   
   dt_auxiliar <- data.frame(t(c("s","p","o")))
   colnames(dt_auxiliar) <- c("s","p","o")
   for(i in 1:nrow(dt_resources)){
-    dt_auxiliar <- rbind(dt_auxiliar,ask_properties_perResource(as.character(dt_resources[i,1]),urlEndpoint,queryLimit))
     print(paste0("resource number ",i))
+    if(!is.na(dt_resources[i,1])){
+      dt_auxiliar <- rbind(dt_auxiliar,
+                           ask_properties_perResource(as.character(dt_resources[i,1]),urlEndpoint,queryLimit))
+    }
   }
   dt_auxiliar <- dt_auxiliar[-1,]
   dt_results <- dt_auxiliar
@@ -250,7 +309,7 @@ ask_properties_OLD <- function(classType, numberRequest, urlEndpoint, queryLimit
   # }
   
   if(nrow(dt_results)<numberRequest){
-    warning(paste0("requested ",numberRequest," results but only were retrieved ",nrow(dt_results)," results"))  
+    warning(paste0("Warning, requested ",numberRequest," results but only were retrieved ",nrow(dt_results)," results"))  
   }
   
   return(dt_results)
