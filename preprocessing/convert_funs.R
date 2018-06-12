@@ -29,18 +29,25 @@ properties_toColumns <- function(dt_properties,domain_propertiesURI=NULL){
   return(learning_Matriz)
 }
 
-#two data frames returned by properties_toColumns function, where columns from dt2 are transformed in order to
+#two data frames returned by preprocessing_layer (which uses properties_toColumns function), where columns from dt2 are transformed in order to
 #adapt to dt1 columns. That implies delete columns from dt2 where are not in dt1 and add "empty" (with 0 values) columns
 #from dt1 to dt2.
-adaptColumns_DT2_like_DT1 <- function(dt1, dt2){#Warning, neither dt1 nor dt2 should have "Class" column
+adaptColumns_DT2_like_DT1 <- function(dt1In, dt2In){#we assume that there are resource column and Class column in each dt
+  
+  dt1 <- dt1In
+  dt2 <- dt2In
   
   names_dt1 <- colnames(dt1)
-  names_dt1 <- names_dt1[-1]#we do not want order first resource column
+  names_dt1 <- names_dt1[-ncol(dt1)]
+  names_dt1 <- names_dt1[-1]#we do not want order first resource column nor class column
+  
   names_dt2 <- colnames(dt2)
-  names_dt2 <- names_dt2[-1]#we do not want order first resource column
+  names_dt2 <- names_dt2[-ncol(dt2)]
+  names_dt2 <- names_dt2[-1]#we do not want order first resource column nor class column
   
   # resources_dt1 <- dt1[,1]
   s <- dt2[,1] #resource dt2
+  Class <- dt2[,ncol(dt2)]
   names_dt1_without_dt2 <- names_dt1[!names_dt1 %in% names_dt2]
   names_dt1_with_dt2 <- names_dt1[names_dt1 %in% names_dt2]
   
@@ -48,7 +55,7 @@ adaptColumns_DT2_like_DT1 <- function(dt1, dt2){#Warning, neither dt1 nor dt2 sh
   dt2_modified[, names_dt1_without_dt2] <- 0
   
   dt2_modified <- dt2_modified[,order(colnames(dt2_modified))]
-  dt2_modified <- cbind(s,dt2_modified)
+  dt2_modified <- cbind(s,dt2_modified,Class)
   
   return(dt2_modified)
 }

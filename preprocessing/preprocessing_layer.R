@@ -48,20 +48,37 @@ preprocessing_layer <- function(positive_types, positive_properties,
   return(learning_Matriz)
 }
 
-preprocessing_layer_prediction <- function(trainingData,properties_list,domain_propertiesURI=NULL){
+preprocessing_layer_prediction <- function(trainingData,
+                                           positive_types, positive_properties,
+                                           negative_types, negative_properties,domain_propertiesURI=NULL){
   
-  stackedProperties <- vector('list',length(properties_list))
-  for(i in 1:length(properties_list)){
-    stackedProperties <- rbind(stackedProperties,properties_list[[i]])
-  }
-  predicting_Matriz <- properties_toColumns(stackedProperties,domain_propertiesURI)
+  #In future, a preprocessing function without types would be necesary, logically this will be used to predict new types that we have not yet
+  new_preprocesedData <- preprocessing_layer(positive_types, positive_properties,
+                                             negative_types, negative_properties,domain_propertiesURI=NULL)
   
   #In this way, properties where not appear in training data will be cut off from predicting matrix,
-  #and new "dummy" properties will added where not appear in predicting matrix (but they does in training data) 
-  predicting_Matriz <- adaptColumns_DT2_like_DT1(dt1 = trainingData, dt2 = predicting_Matriz)
+  #and new "dummy" properties will added where not appear in predicting matrix (but they does in training data)
+  #Note: resource (s) column and type (Class) column remains in the same position (at first and at the end, respectively)
+  predicting_Matriz <- adaptColumns_DT2_like_DT1(dt1 = trainingData,
+                                                 dt2 = new_preprocesedData)
   
   return(predicting_Matriz)
 }
-  
-  
-  
+
+#when there are no resources without type in "properties_list", by now, use last one
+# preprocessing_layer_prediction <- function(trainingData, properties_list, domain_propertiesURI=NULL){
+#   
+#   stackedProperties <- vector('list',length(properties_list))
+#   for(i in 1:length(properties_list)){
+#     stackedProperties <- rbind(stackedProperties,properties_list[[i]])
+#   }
+#   predicting_Matriz <- properties_toColumns(stackedProperties,domain_propertiesURI)
+#   
+#   #In this way, properties where not appear in training data will be cut off from predicting matrix,
+#   #and new "dummy" properties will added where not appear in predicting matrix (but they does in training data) 
+#   predicting_Matriz <- adaptColumns_DT2_like_DT1(dt1 = trainingData, dt2 = predicting_Matriz)
+#   
+#   return(predicting_Matriz)
+# }
+
+

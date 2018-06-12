@@ -128,7 +128,8 @@ ask_resources <- function(classType, offsetInitial, numberRequest, urlEndpoint, 
   
   
   if(nrow(dt_results)<numberRequest){
-    warning(paste0("Warning, requested ",numberRequest," results but only were retrieved ",nrow(dt_results)," results"))  
+    warning(paste0("Warning, requested ",numberRequest," results but only were retrieved ",nrow(dt_results)," results"))
+    # stop(paste0("Warning, requested ",numberRequest," results but only were retrieved ",nrow(dt_results)," results")) 
   }
   
   # print(paste0("found resources belonging to type ",dt_results[1,3]," :"))
@@ -144,36 +145,23 @@ ask_properties_perResource <- function(resource, urlEndpoint, queryLimit){
   }
   
   queryLimit <- round(queryLimit)
-  
-  #esto dara una query que no devolvera nada, para no hacer malgasto, simplemente comprobar
-  # print(resource)
-  # resource <- gsub(pattern = '%', replacement = "", x = resource, fixed = TRUE)
-  # print(resource)
-  
+ 
   invalidCharacters <- c('%')#problems if we would have to add a whole japanise dictionary for example
-  # invalidCharacters <- c('NA','%E2%80%93')
-  #http://dbpedia.org/resource/Jefferson%E2%80%93Jackson_Day
-  # invalidCharacteresFound <- FALSE
-  # for(i in 1:length(invalidCharacters)){
-  #   if(!grepl(invalidCharacters[i], resource, fixed = TRUE)){
-  #     invalidCharacteresFound <- TRUE
-  #   }
-  # }
   print(resource)
   # if(!invalidCharacteresFound){
   if(!grepl(invalidCharacters, resource, fixed = TRUE)){
     
     queryParte1 <- paste0("
-                          select distinct (",resource,") as ?s ?p ?o
+                          select distinct (",resource,") as ?s ?p
                         where {
                         ",resource," ?p ?o .
                         } OFFSET ")
     
     queryParte2 <- paste0(" LIMIT ",queryLimit)
     i <- 0
-    comprobador <- data.frame(t(c("s","p","o")))
-    dt_auxiliar <- data.frame(t(c("s","p","o")))
-    colnames(dt_auxiliar) <- c("s","p","o")
+    comprobador <- data.frame(t(c("s","p")))
+    dt_auxiliar <- data.frame(t(c("s","p")))
+    colnames(dt_auxiliar) <- c("s","p")
     stackedResources <- 0
     while(nrow(comprobador)!=0){#we want N resources, NOT N triples
       # print("starting loop")
@@ -191,8 +179,8 @@ ask_properties_perResource <- function(resource, urlEndpoint, queryLimit){
     
     return(dt_results)
   }else{
-    dt_auxiliar <- data.frame(t(c("s","p","o")))
-    colnames(dt_auxiliar) <- c("s","p","o")
+    dt_auxiliar <- data.frame(t(c("s","p")))
+    colnames(dt_auxiliar) <- c("s","p")
     dt_auxiliar <- dt_auxiliar[-1,]
     print("improper resource, skipping query")
     return(dt_auxiliar)
@@ -203,8 +191,11 @@ ask_properties_iterative <- function(dt_resources, urlEndpoint, queryLimit){
   #check types
   print(paste0("asking properties per resource belonging to type ",dt_resources[1,3]))
   
-  dt_auxiliar <- data.frame(t(c("s","p","o")))
-  colnames(dt_auxiliar) <- c("s","p","o")
+  #watch out about data frame expected.... s,p,o or s,p
+  # dt_auxiliar <- data.frame(t(c("s","p","o")))
+  # colnames(dt_auxiliar) <- c("s","p","o")
+  dt_auxiliar <- data.frame(t(c("s","p")))
+  colnames(dt_auxiliar) <- c("s","p")
   for(i in 1:nrow(dt_resources)){
     print(paste0("resource number ",i))
     if(!is.na(dt_resources[i,1])){
@@ -314,3 +305,67 @@ ask_properties_OLD <- function(classType, numberRequest, urlEndpoint, queryLimit
   
   return(dt_results)
 }
+
+
+ask_properties_perResource_OLD_retrievingObjects <- function(resource, urlEndpoint, queryLimit){
+  library(SPARQL)
+  if(!is.character(resource) || !is.character(urlEndpoint) || !is.numeric(queryLimit)){
+    stop(paste0("Error, parameter types are not correct"), call.=FALSE)
+  }
+  
+  queryLimit <- round(queryLimit)
+  
+  #esto dara una query que no devolvera nada, para no hacer malgasto, simplemente comprobar
+  # print(resource)
+  # resource <- gsub(pattern = '%', replacement = "", x = resource, fixed = TRUE)
+  # print(resource)
+  
+  invalidCharacters <- c('%')#problems if we would have to add a whole japanise dictionary for example
+  # invalidCharacters <- c('NA','%E2%80%93')
+  #http://dbpedia.org/resource/Jefferson%E2%80%93Jackson_Day
+  # invalidCharacteresFound <- FALSE
+  # for(i in 1:length(invalidCharacters)){
+  #   if(!grepl(invalidCharacters[i], resource, fixed = TRUE)){
+  #     invalidCharacteresFound <- TRUE
+  #   }
+  # }
+  print(resource)
+  # if(!invalidCharacteresFound){
+  if(!grepl(invalidCharacters, resource, fixed = TRUE)){
+    
+    queryParte1 <- paste0("
+                          select distinct (",resource,") as ?s ?p ?o
+                          where {
+                          ",resource," ?p ?o .
+                          } OFFSET ")
+    
+    queryParte2 <- paste0(" LIMIT ",queryLimit)
+    i <- 0
+    comprobador <- data.frame(t(c("s","p","o")))
+    dt_auxiliar <- data.frame(t(c("s","p","o")))
+    colnames(dt_auxiliar) <- c("s","p","o")
+    stackedResources <- 0
+    while(nrow(comprobador)!=0){#we want N resources, NOT N triples
+      # print("starting loop")
+      qd <- SPARQL(urlEndpoint,paste0(queryParte1,
+                                      as.character(i*queryLimit), #each iteration gets queryLimit
+                                      queryParte2))
+      comprobador <- qd$results
+      dt_auxiliar <- rbind(dt_auxiliar,qd$results)
+      i <- i+1
+      # print(paste0("ending iteration pagination query ",i))
+      Sys.sleep(1)#endpoint common particularities
+    }
+    dt_auxiliar <- dt_auxiliar[-1,]
+    dt_results <- dt_auxiliar
+    
+    return(dt_results)
+  }else{
+    dt_auxiliar <- data.frame(t(c("s","p","o")))
+    colnames(dt_auxiliar) <- c("s","p","o")
+    dt_auxiliar <- dt_auxiliar[-1,]
+    print("improper resource, skipping query")
+    return(dt_auxiliar)
+  }
+}
+
