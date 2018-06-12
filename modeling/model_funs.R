@@ -26,6 +26,21 @@ simpleRandomForest <- function(dt_data, id_model, randomSeed){
   # no disk acces for now
   # h2o.saveModel(rf_model, path=paste(getwd(),"/someModelsHoliday/",sep=""))
   
+  h2o.shutdown()
+  
   return(rf_model)
+}
+
+
+simpleRandomForest_Prediction <- function(dt_data,id_model){
+  library(h2o)
+  h2o.init(
+    nthreads=-1            ## -1: use all available threads
+    #max_mem_size = "2G"
+  )
+  rf_predictions <- h2o.predict(id_model,dt_data[,c(2:ncol(dt_data))])
+  
+  h2o.shutdown()
+  return(rf_predictions)
 }
 

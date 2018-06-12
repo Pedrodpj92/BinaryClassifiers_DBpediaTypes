@@ -97,3 +97,5 @@ collecting_layer <- function(positiveClass, numberPositiveCases,
   return(queryResults)
 }
 
+
+

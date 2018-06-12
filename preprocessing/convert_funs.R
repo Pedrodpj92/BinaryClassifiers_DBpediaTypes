@@ -37,7 +37,7 @@ adaptColumns_DT2_like_DT1 <- function(dt1, dt2){#Warning, neither dt1 nor dt2 sh
   names_dt1 <- colnames(dt1)
   names_dt1 <- names_dt1[-1]#we do not want order first resource column
   names_dt2 <- colnames(dt2)
-  names_dt2 <- names_dt2[-1]
+  names_dt2 <- names_dt2[-1]#we do not want order first resource column
   
   # resources_dt1 <- dt1[,1]
   s <- dt2[,1] #resource dt2

@@ -87,13 +87,15 @@ get_oneClassBinaryModel <- function(positiveClass, numberPositiveCases,
     
     print(paste0(Sys.time()," -> starting preprocessing phase"))
     #phase 2
-    if(!is.null(domain_propertiesURI)){
-      learningSet <- preprocessing_layer(positive_types, positive_properties,
-                                         negative_types, negative_properties,domain_propertiesURI)
-    }else{
-      learningSet <- preprocessing_layer(positive_types, positive_properties,
-                                         negative_types, negative_properties)
-    }
+    # if(!is.null(domain_propertiesURI)){
+    #   learningSet <- preprocessing_layer(positive_types, positive_properties,
+    #                                      negative_types, negative_properties,domain_propertiesURI)
+    # }else{
+    #   learningSet <- preprocessing_layer(positive_types, positive_properties,
+    #                                      negative_types, negative_properties)
+    # }
+    learningSet <- preprocessing_layer(positive_types, positive_properties,
+                                       negative_types, negative_properties,domain_propertiesURI)
     
     print(paste0(Sys.time()," -> starting modeling phase"))
     #phase 3
