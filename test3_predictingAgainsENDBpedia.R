@@ -52,7 +52,7 @@ nr <- 1
 urlEnDBpedia <- "https://dbpedia.org/sparql"
 qL <- 10000
 
-rf_HvsL1T <- "randomForest_HolidayVsLevel1Types"
+rf_HvsL1T <- "randomForest_HolidayVsLevel1Types1"
 rf_path <- paste0(getwd(),"/")
 
 load(file = paste0(getwd(),"/exp3_Holiday_vs_SeveralFirstLevel.RData"))
@@ -65,4 +65,5 @@ test_exp3_ENDBpedia <- get_predictionsFromClassBinaryModel(classBinaryModel_obje
                                                                       nameFile = rf_HvsL1T, pathModel = rf_path,
                                                                       numberOfRequest = nr, urlEndpoint = urlEnDBpedia,queryLimit = qL)
 
-save(test_exp3_ENDBpedia, file = paste0(getwd(),"/exp3_ENDBpedia.RData"))
+
+save(test_exp3_ENDBpedia, file = paste0(getwd(),"/exp3_ENDBpedia_JustCollectAndPrepare.RData"))
