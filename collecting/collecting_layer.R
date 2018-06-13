@@ -60,7 +60,7 @@ collecting_layer <- function(positiveClass, numberPositiveCases,
   #this loop is divided in order to retrieve all resources first, in case of there would be some problem on them
   for(i in 1:length(numberNegativeCases)){
     print(paste0("let's ask ",numberNegativeCases[[i]]," resources about ",negativeClasses[[i]]," type"))
-    print(paste0("other parameter queryLimit: ",queryLimit))
+    # print(paste0("other parameter queryLimit: ",queryLimit))
     negative_types[[i]] <- ask_resources(negativeClasses[[i]], 0, numberNegativeCases[[i]], urlEndpoint, queryLimit)
   }
   

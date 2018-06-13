@@ -60,7 +60,9 @@ source(paste(getwd(),"/modeling/modeling_layer.R",sep=""))
 
 get_oneClassBinaryModel <- function(positiveClass, numberPositiveCases,
                                     negativeClasses, numberNegativeCases,
-                                    numberOfRequest, urlEndpoint, queryLimit,domain_propertiesURI=NULL#,randomSeed
+                                    numberOfRequest, urlEndpoint, queryLimit,
+                                    nameModel, pathModel,
+                                    domain_propertiesURI=NULL#,randomSeed
 ){
   if(!is.numeric(numberOfRequest)){
     if(!numberOfRequest%%1==0){
@@ -99,7 +101,7 @@ get_oneClassBinaryModel <- function(positiveClass, numberPositiveCases,
     
     print(paste0(Sys.time()," -> starting modeling phase"))
     #phase 3
-    trainedModel <- modeling_layer(learningSet,i,1234)
+    trainedModel <- modeling_layer(learningSet,nameModel,i,pathModel,1234)
     
     #save iteration data and results
     # aux_listStepCover <- vector("list",3)

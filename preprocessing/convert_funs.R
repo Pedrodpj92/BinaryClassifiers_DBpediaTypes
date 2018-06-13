@@ -23,7 +23,7 @@ properties_toColumns <- function(dt_properties,domain_propertiesURI=NULL){
   
   s <- learning_Matriz[,1]
   learning_Matriz <- learning_Matriz[,-1]
-  learning_Matriz[,order(colnames(learning_Matriz))]
+  learning_Matriz <- learning_Matriz[,order(colnames(learning_Matriz))]
   learning_Matriz <- cbind(s,learning_Matriz)
   
   return(learning_Matriz)

@@ -1,6 +1,6 @@
 #model_funs.R
 
-simpleRandomForest <- function(dt_data, id_model, randomSeed){
+simpleRandomForest <- function(dt_data, name_model, id_model, path_model, randomSeed){
   library(h2o)
   
   
@@ -11,7 +11,7 @@ simpleRandomForest <- function(dt_data, id_model, randomSeed){
   
   learning <- as.h2o(x = dt_data, destination_frame = "learning.hex")
   rf_model <- h2o.randomForest(
-    model_id=paste0("rf_model_",id_model),
+    model_id=paste0(name_model,id_model),
     training_frame=learning, 
     # validation_frame=dt_data[,2:ncol(dt_data)],
     x=2:(ncol(learning)-1),
@@ -23,24 +23,25 @@ simpleRandomForest <- function(dt_data, id_model, randomSeed){
     score_each_iteration = T,
     seed = randomSeed)
   summary(rf_model)
-  # no disk acces for now
-  # h2o.saveModel(rf_model, path=paste(getwd(),"/someModelsHoliday/",sep=""))
+  h2o.saveModel(rf_model, path=path_model)
   
-  h2o.shutdown()
+  h2o.shutdown(prompt = FALSE)
   
   return(rf_model)
 }
 
 
-simpleRandomForest_Prediction <- function(dt_data,id_model){
+simpleRandomForest_Prediction <- function(dt_data, name_file, path_model){
   library(h2o)
   h2o.init(
     nthreads=-1            ## -1: use all available threads
     #max_mem_size = "2G"
   )
-  rf_predictions <- h2o.predict(id_model,dt_data[,c(2:ncol(dt_data))])
+  trainedModel <- h2o.loadModel(path = paste0(path_model,name_file))
+  predicting <- as.h2o(dt_data)
+  rf_predictions <- h2o.predict(trainedModel,predicting[,c(2:ncol(predicting))])
   
-  h2o.shutdown()
+  h2o.shutdown(prompt = FALSE)
   return(rf_predictions)
 }
 

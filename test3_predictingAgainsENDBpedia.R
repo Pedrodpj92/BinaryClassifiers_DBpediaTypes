@@ -1,7 +1,9 @@
 #!/usr/bin/env Rscript
+#test3_predictingAgainsENDBpedia.R
+
 #test_exp3_Holiday_vs_SeveralFirstLevel.R
 
-source(paste(getwd(),"/get_oneClassBinaryModel.R",sep=""))
+source(paste(getwd(),"/get_predictionsFromClassBinaryModel.R",sep=""))
 
 pc1 <- "<http://dbpedia.org/ontology/Holiday>"
 npc1 <- 1000
@@ -46,17 +48,21 @@ nnc1[[17]] <- 50
 nnc1[[18]] <- 50
 nnc1[[19]] <- 100
 nr <- 1
-urlEsDBpedia <- "http://es.dbpedia.org/sparql"
+# urlEsDBpedia <- "http://es.dbpedia.org/sparql"
+urlEnDBpedia <- "https://dbpedia.org/sparql"
 qL <- 10000
 
 rf_HvsL1T <- "randomForest_HolidayVsLevel1Types"
 rf_path <- paste0(getwd(),"/")
 
-test_experiment3 <- get_oneClassBinaryModel(positiveClass = pc1, numberPositiveCases = npc1,
-                                            negativeClasses = nc1, numberNegativeCases = nnc1,
-                                            nameModel = rf_HvsL1T, pathModel = rf_path,
-                                            numberOfRequest = nr, urlEndpoint = urlEsDBpedia, queryLimit = qL)
+load(file = paste0(getwd(),"/exp3_Holiday_vs_SeveralFirstLevel.RData"))
 
-save(test_experiment3, file = paste0(getwd(),"/exp3_Holiday_vs_SeveralFirstLevel.RData"))
+binaryModel <- test_experiment3
 
+test_exp3_ENDBpedia <- get_predictionsFromClassBinaryModel(classBinaryModel_object = binaryModel,
+                                                                      positiveClass = pc1, numberPositiveCases = npc1,
+                                                                      negativeClasses = nc1, numberNegativeCases = nnc1,
+                                                                      nameFile = rf_HvsL1T, pathModel = rf_path,
+                                                                      numberOfRequest = nr, urlEndpoint = urlEnDBpedia,queryLimit = qL)
 
+save(test_exp3_ENDBpedia, file = paste0(getwd(),"/exp3_ENDBpedia.RData"))

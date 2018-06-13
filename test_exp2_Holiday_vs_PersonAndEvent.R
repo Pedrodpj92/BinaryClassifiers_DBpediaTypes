@@ -14,10 +14,15 @@ nnc1[[2]] <- 500
 nr <- 1
 urlEsDBpedia <- "http://es.dbpedia.org/sparql"
 qL <- 10000
-test_experiment1 <- get_oneClassBinaryModel(positiveClass = pc1, numberPositiveCases = npc1,
+
+rf_HvsPandE <- "randomForest_HolidayVsPersonAndEvent"
+rf_path <- paste0(getwd(),"/")
+
+test_experiment2 <- get_oneClassBinaryModel(positiveClass = pc1, numberPositiveCases = npc1,
                                             negativeClasses = nc1, numberNegativeCases = nnc1,
+                                            nameModel = rf_HvsPandE, pathModel = rf_path,
                                             numberOfRequest = nr, urlEndpoint = urlEsDBpedia, queryLimit = qL)
 
-save(test_experiment1, file = paste0(getwd(),"/exp2_Holiday_vs_PersonAndEvent.RData"))
+save(test_experiment2, file = paste0(getwd(),"/exp2_Holiday_vs_PersonAndEvent.RData"))
 
 

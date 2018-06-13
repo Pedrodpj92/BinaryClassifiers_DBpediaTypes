@@ -18,6 +18,7 @@ source(paste(getwd(),"/modeling/modeling_layer.R",sep=""))
 get_predictionsFromClassBinaryModel <- function(classBinaryModel_object,
                                                 positiveClass, numberPositiveCases,
                                                 negativeClasses, numberNegativeCases,
+                                                nameFile, pathModel,
                                                 numberOfRequest, urlEndpoint, queryLimit,domain_propertiesURI=NULL#,randomSeed
 ){
   
@@ -37,14 +38,21 @@ get_predictionsFromClassBinaryModel <- function(classBinaryModel_object,
                                      negativeClasses, numberNegativeCases,
                                      urlEndpoint, queryLimit)
   
+  positive_types <- data_collected[[1]]
+  positive_properties <- data_collected[[2]]
+  negative_types <- data_collected[[3]]
+  negative_properties  <- data_collected[[4]]
+  
   # predictingSet <- preprocessing_layer_prediction(trainingData = trainingData,
   #                                                 properties_list = )
   predictingSet <- preprocessing_layer_prediction(trainingData,
                                                   positive_types, positive_properties,
                                                   negative_types, negative_properties,domain_propertiesURI)
   #predictions should be done without Class column
-  predictionsDone <- modeling_layer_prediction(dt_predict = predictingSet[,-ncol(predictingSet)],id_model = binaryModel)
-  
+  # predictionsDone <- modeling_layer_prediction(dt_predict = predictingSet[,-ncol(predictingSet)],id_model = binaryModel)
+  #dt_data, name_file, path_model
+  predictionsDone <- modeling_layer_prediction(dt_data = predictingSet[,-ncol(predictingSet)],
+                                               name_file = nameFile, path_model = pathModel)
   #doing confusion matrix with original types (Class) and predictions
   # comparativePerResource <- cbind(predictingSet[,c(1,ncol(predictingSet))],predictionsDone$predict)#CHECK
   realTypes <- predictingSet[,ncol(predictingSet)]

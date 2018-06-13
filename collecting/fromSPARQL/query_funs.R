@@ -152,7 +152,7 @@ ask_properties_perResource <- function(resource, urlEndpoint, queryLimit){
   if(!grepl(invalidCharacters, resource, fixed = TRUE)){
     
     queryParte1 <- paste0("
-                          select distinct (",resource,") as ?s ?p
+                          select (",resource,") as ?s ?p
                         where {
                         ",resource," ?p ?o .
                         } OFFSET ")
@@ -172,17 +172,26 @@ ask_properties_perResource <- function(resource, urlEndpoint, queryLimit){
       dt_auxiliar <- rbind(dt_auxiliar,qd$results)
       i <- i+1
       # print(paste0("ending iteration pagination query ",i))
-      Sys.sleep(1)#endpoint common particularities
+      Sys.sleep(1)#endpoint common particularities and limitations
     }
     dt_auxiliar <- dt_auxiliar[-1,]
     dt_results <- dt_auxiliar
-    
+    print(paste0("found ",nrow(dt_results)," properties"))
+    print("")
+    dt_results$s <- as.character(dt_results$s)
+    dt_results$s <- as.factor(dt_results$s)
+    dt_results$p <- as.character(dt_results$p)
+    dt_results$p <- as.factor(dt_results$p)
     return(dt_results)
   }else{
     dt_auxiliar <- data.frame(t(c("s","p")))
     colnames(dt_auxiliar) <- c("s","p")
     dt_auxiliar <- dt_auxiliar[-1,]
     print("improper resource, skipping query")
+    dt_auxiliar$s <- as.character(dt_auxiliar$s)
+    dt_auxiliar$s <- as.factor(dt_auxiliar$s)
+    dt_auxiliar$p <- as.character(dt_auxiliar$p)
+    dt_auxiliar$p <- as.factor(dt_auxiliar$p)
     return(dt_auxiliar)
   }
 }
@@ -207,6 +216,8 @@ ask_properties_iterative <- function(dt_resources, urlEndpoint, queryLimit){
   dt_results <- dt_auxiliar
   dt_results$s <- as.character(dt_results$s)
   dt_results$s <- as.factor(dt_results$s)
+  dt_results$p <- as.character(dt_results$p)
+  dt_results$p <- as.factor(dt_results$p)
   return(dt_results) 
 }
 
