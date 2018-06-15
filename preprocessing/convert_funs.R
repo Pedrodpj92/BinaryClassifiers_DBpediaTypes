@@ -8,10 +8,15 @@
 properties_toColumns <- function(dt_properties,domain_propertiesURI=NULL){
   
   library(reshape2)
-  learning_Matriz <- dt_properties[,c(1,2)]
+  # learning_Matriz <- dt_properties[,c(1,2)]
   if(!is.null(domain_propertiesURI)){
     dt_properties <- dt_properties[grep(domain_propertiesURI,dt_properties[,2]),]
   }
+  dt_properties$s <- as.character(dt_properties$s)
+  dt_properties$s <- as.factor(dt_properties$s)
+  dt_properties$p <- as.character(dt_properties$p)
+  dt_properties$p <- as.factor(dt_properties$p)
+  learning_Matriz <- dt_properties[,c(1,2)]
   
   learning_Matriz <- dcast(learning_Matriz, s ~ p, fill=0)
   learning_Matriz2 <- learning_Matriz[,2:ncol(learning_Matriz)]

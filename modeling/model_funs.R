@@ -41,6 +41,8 @@ simpleRandomForest_Prediction <- function(dt_data, name_file, path_model){
   predicting <- as.h2o(dt_data)
   rf_predictions <- h2o.predict(trainedModel,predicting[,c(2:ncol(predicting))])
   
+  rf_predictions <- as.data.frame(rf_predictions)
+  
   h2o.shutdown(prompt = FALSE)
   return(rf_predictions)
 }

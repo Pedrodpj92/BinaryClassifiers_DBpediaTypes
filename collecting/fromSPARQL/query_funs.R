@@ -81,7 +81,7 @@ ask_resources <- function(classType, offsetInitial, numberRequest, urlEndpoint, 
   dt_results <- dt_auxiliar
   
   #first if is when we page several resources (more than 10K as maximum per query) and we need to delete some of last query
-  getJustOneIf <- FALSE #really, grep another better example
+  getJustOneIf <- FALSE 
   if(remainingLines<0 && (nrow(dt_results)+remainingLines)>0 && !getJustOneIf){
     dt_results <- head(dt_results,remainingLines)#remove last lines which are more than requested
     print(paste0("droping out excess of resources requested, now there are ",nrow(dt_results)))
@@ -90,7 +90,7 @@ ask_resources <- function(classType, offsetInitial, numberRequest, urlEndpoint, 
     # print(remainingLines)
     getJustOneIf <- TRUE
   }
-  #this another if is when dt_results is more than request and there were not pagination needed
+  #this another if is used when dt_results is more than request and there were not pagination needed
   if(numberRequest<nrow(dt_results) && !getJustOneIf){
     dt_results <- head(dt_results,numberRequest)
     print(paste0("droping out excess of resources requested, now there are ",nrow(dt_results)))
@@ -172,7 +172,7 @@ ask_properties_perResource <- function(resource, urlEndpoint, queryLimit){
       dt_auxiliar <- rbind(dt_auxiliar,qd$results)
       i <- i+1
       # print(paste0("ending iteration pagination query ",i))
-      Sys.sleep(1)#endpoint common particularities and limitations
+      # Sys.sleep(1)#endpoint common particularities and limitations
     }
     dt_auxiliar <- dt_auxiliar[-1,]
     dt_results <- dt_auxiliar

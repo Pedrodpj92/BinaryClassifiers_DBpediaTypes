@@ -54,7 +54,7 @@ preprocessing_layer_prediction <- function(trainingData,
   
   #In future, a preprocessing function without types would be necesary, logically this will be used to predict new types that we have not yet
   new_preprocesedData <- preprocessing_layer(positive_types, positive_properties,
-                                             negative_types, negative_properties,domain_propertiesURI=NULL)
+                                             negative_types, negative_properties,domain_propertiesURI)
   
   #In this way, properties where not appear in training data will be cut off from predicting matrix,
   #and new "dummy" properties will added where not appear in predicting matrix (but they does in training data)
