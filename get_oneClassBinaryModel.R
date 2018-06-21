@@ -18,6 +18,8 @@ source(paste(getwd(),"/modeling/modeling_layer.R",sep=""))
 # - URL's endpoint SPARQL (String)
 # - queryLimit (integer), it would be wonderful have something like configuration settings, to give this values
 # - domain_propertiesURI (string), optional, string filter to grep some specific properties, for instance, only belonging to DBpedia ontology
+# - collected_data (List <List <data.frame>>), optional, in case to already have collected data, skip collection phase
+# - preprocessed_data (data frame), optional, in case to already have prepared data, skip its respective phase
 
 #Exceptions
 # - NumberOfRequest must be an integer
@@ -62,7 +64,8 @@ get_oneClassBinaryModel <- function(positiveClass, numberPositiveCases,
                                     negativeClasses, numberNegativeCases,
                                     numberOfRequest, urlEndpoint, queryLimit,
                                     nameModel, pathModel,
-                                    domain_propertiesURI=NULL#,randomSeed
+                                    domain_propertiesURI=NULL,
+                                    collected_data=NULL, preprocessed_data=NULL#,randomSeed
 ){
   if(!is.numeric(numberOfRequest)){
     if(!numberOfRequest%%1==0){
@@ -75,13 +78,17 @@ get_oneClassBinaryModel <- function(positiveClass, numberPositiveCases,
   stackRequest <- vector("list",numberOfRequest)
   for(i in 1:numberOfRequest){
     
+    #next code in "if" statement should be replaced by preprocessing_layer_prediction() when would be tested
+    if(is.null(collected_data) && is.null(preprocessed_data)){
+      
+    
     print(paste0(Sys.time()," -> starting request number ",i))
     print(paste0(Sys.time()," -> starting collection phase"))
     
     #phase 1
     data_collected <- collecting_layer(positiveClass, numberPositiveCases,
                                        negativeClasses, numberNegativeCases,
-                                       urlEndpoint, queryLimit)
+                                       urlEndpoint, queryLimit,domain_propertiesURI)
     positive_types <- data_collected[[1]]
     positive_properties <- data_collected[[2]]
     negative_types <- data_collected[[3]]
@@ -89,15 +96,17 @@ get_oneClassBinaryModel <- function(positiveClass, numberPositiveCases,
     
     print(paste0(Sys.time()," -> starting preprocessing phase"))
     #phase 2
-    # if(!is.null(domain_propertiesURI)){
-    #   learningSet <- preprocessing_layer(positive_types, positive_properties,
-    #                                      negative_types, negative_properties,domain_propertiesURI)
-    # }else{
-    #   learningSet <- preprocessing_layer(positive_types, positive_properties,
-    #                                      negative_types, negative_properties)
-    # }
     learningSet <- preprocessing_layer(positive_types, positive_properties,
                                        negative_types, negative_properties,domain_propertiesURI)
+    
+    }else{
+      print("recovering saved data.....")
+      data_collected <- collected_data
+      learningSet <- preprocessed_data
+      print(paste0("learning set with ",nrow(learningSet)," resources as rows and ", 
+                   nrow(learningSet)-2,"properties as columns"))
+      print(paste0(nrow(learningSet[learningSet$Class == "1"]," resources with positive class (type)")))
+    }
     
     print(paste0(Sys.time()," -> starting modeling phase"))
     #phase 3

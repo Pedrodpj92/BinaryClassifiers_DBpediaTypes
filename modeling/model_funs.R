@@ -47,3 +47,38 @@ simpleRandomForest_Prediction <- function(dt_data, name_file, path_model){
   return(rf_predictions)
 }
 
+
+modelWithC50_10Kfold <- function(dt_data, name_model, id_model, path_model, randomSeed){
+  
+  library(plyr)
+  library(C50)
+  
+  
+  list_indexes <- createFolds(y = dt_learning$Class, k = 10) #to do folds
+  list_folds <- list()
+  for(i in 1:length(list_indexes)){
+    list_folds[[i]] <- dt_learning[list_indexes[[i]],]
+  }
+  
+  list_learning <- list()
+  for(i in 1:length(list_folds)){
+    list_learning[[i]]$test <- ldply(list_folds[[i]], data.frame)
+    list_learning[[i]]$training <- ldply(list_folds[[-i]], data.frame)
+    list_learning[[i]]$trainedModel <- C50::C5.0(list_learning[[i]]$training[2:(ncol(list_learning[[i]]$training)-1)], list_learning[[i]]$training[2:ncol(list_learning[[i]]$training),])
+    
+    predictedTypes <- predict(object = list_learning[[i]]$trainedModel, newdata = list_learning[[i]]$test[,2:(ncol(list_learning[[i]]$test)-1)])
+    predictedTypes <- predictedTypes$predict
+    realTypes <- list_learning[[i]]$test[,(ncol(list_learning[[i]]$test))]
+    confusionMatrixTypes <- table(predictedTypes,realTypes)
+    
+    list_learning[[i]]$confusionMatrixTypes <- confusionMatrixTypes
+    
+  }
+  
+  
+  
+  
+  final_trainedModel <- C50::C5.0(dt_data[2:(ncol(dt_data)-1)], dt_data[2:ncol(dt_data),])
+  
+}
+

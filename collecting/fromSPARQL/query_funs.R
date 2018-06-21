@@ -128,8 +128,8 @@ ask_resources <- function(classType, offsetInitial, numberRequest, urlEndpoint, 
   
   
   if(nrow(dt_results)<numberRequest){
-    warning(paste0("Warning, requested ",numberRequest," results but only were retrieved ",nrow(dt_results)," results"))
-    # stop(paste0("Warning, requested ",numberRequest," results but only were retrieved ",nrow(dt_results)," results")) 
+    # warning(paste0("Warning, requested ",numberRequest," results but only were retrieved ",nrow(dt_results)," results"))
+    stop(paste0("Error, requested ",numberRequest," results but only were retrieved ",nrow(dt_results)," results, please, check and select a proper number"))
   }
   
   # print(paste0("found resources belonging to type ",dt_results[1,3]," :"))
@@ -172,7 +172,7 @@ ask_properties_perResource <- function(resource, urlEndpoint, queryLimit){
       dt_auxiliar <- rbind(dt_auxiliar,qd$results)
       i <- i+1
       # print(paste0("ending iteration pagination query ",i))
-      # Sys.sleep(1)#endpoint common particularities and limitations
+      Sys.sleep(1)#endpoint common particularities and limitations
     }
     dt_auxiliar <- dt_auxiliar[-1,]
     dt_results <- dt_auxiliar
@@ -379,4 +379,85 @@ ask_properties_perResource_OLD_retrievingObjects <- function(resource, urlEndpoi
     return(dt_auxiliar)
   }
 }
+
+
+ask_res_and_prop_fromType <- function(typeClass,numberCases,
+                                      urlEndpoint,queryLimit,domain_propertiesURI){
+  
+  
+  resources_offset <- 0
+  needsContinue <- TRUE
+  currentNumberCases <- numberCases
+  
+  stackedResources <- data.frame(t(c("s","p","o")))
+  colnames(stackedResources) <- c("s","p","o")
+  
+  stackedProperties <- data.frame(t(c("s","p")))
+  colnames(stackedProperties) <- c("s","p")
+  
+  while(needsContinue){
+    
+    found_types <- ask_resources(typeClass, resources_offset, currentNumberCases, urlEndpoint, queryLimit)
+    resources_found <- nrow(found_types)
+    found_types$s <- as.character(found_types$s)
+    found_types$s <- as.factor(found_types$s)
+    
+    if(resources_found>1){
+      resources_offset <- resources_offset+resources_found
+      found_properties <- ask_properties(found_types, urlEndpoint, queryLimit)
+      
+      print(paste0("number of properties before cleaning ",nrow(found_properties)))
+      
+      # print(paste0("pero que estoy teniendo en el valor de domain_propertiesURI: ", domain_propertiesURI))
+      if(!is.null(domain_propertiesURI)){
+        found_properties <- found_properties[grep(domain_propertiesURI,found_properties[,2]),]
+        print(paste0("estoy entrando en la condicion de limpieza, usando: ", domain_propertiesURI))
+      }
+      
+      print(paste0("number of properties after cleaning ",nrow(found_properties)))
+      
+      found_properties$s <- as.character(found_properties$s)
+      found_properties$s <- as.factor(found_properties$s)
+      
+      print(paste0("number of resources before cleaning ",nrow(found_types)))
+      remainingResources <- found_types[found_types$s %in% found_properties$s,]
+      print(paste0("number of resources after cleaning ",nrow(remainingResources)))
+      
+      stackedResources <- rbind(stackedResources,remainingResources)
+      stackedProperties <- rbind(stackedProperties,found_properties)
+      
+      if(nrow(stackedResources)>=numberCases){
+        needsContinue <- FALSE
+        print(paste0("number of stacked resources: ",nrow(stackedResources)))
+        print(paste0("number of resourcesAsked: ",numberCases))
+        
+      }else{
+        currentNumberCases <- currentNumberCases-nrow(remainingResources)
+        print("some resources had not proper properties, so new resources will be requested")
+        print(paste0("number of stacked resources: ",nrow(stackedResources)))
+        print(paste0("number of resourcesAsked: ",numberCases))
+      }
+      
+    }else{
+      stop(paste0("Error, resources with Class ",typeClass," have not been found"), call.=FALSE)
+    }
+    
+  }
+  found_types <- found_types[-1,]
+  found_types <- stackedResources
+  found_types$s <- as.character(found_types$s)
+  found_types$s <- as.factor(found_types$s)
+  found_properties <- found_properties[-1,]
+  found_properties <- stackedProperties
+  found_properties$s <- as.character(found_properties$s)
+  found_properties$s <- as.factor(found_properties$s)
+  
+  wrapingSolution <- list()
+  wrapingSolution[[1]] <- found_types
+  wrapingSolution[[2]] <- found_properties
+  
+  return(wrapingSolution)
+}
+
+
 

@@ -22,7 +22,8 @@ get_predictionsFromClassBinaryModel <- function(classBinaryModel_object,
                                                 numberOfRequest, urlEndpoint, queryLimit,domain_propertiesURI=NULL#,randomSeed
 ){
   
-  library(caret)
+  # library(caret)
+  # library(e1071)
   
   #when several iterations were done, here will be a loop
   firstIt <- classBinaryModel_object[[1]]
@@ -50,21 +51,21 @@ get_predictionsFromClassBinaryModel <- function(classBinaryModel_object,
                                                   negative_types, negative_properties,domain_propertiesURI)
   #predictions should be done without Class column
   # predictionsDone <- modeling_layer_prediction(dt_predict = predictingSet[,-ncol(predictingSet)],id_model = binaryModel)
-  #dt_data, name_file, path_model
+  
   predictionsDone <- modeling_layer_prediction(dt_data = predictingSet[,-ncol(predictingSet)],
                                                name_file = nameFile, path_model = pathModel)
   #doing confusion matrix with original types (Class) and predictions
   # comparativePerResource <- cbind(predictingSet[,c(1,ncol(predictingSet))],predictionsDone$predict)#CHECK
   realTypes <- predictingSet[,ncol(predictingSet)]
   predictedTypes <- predictionsDone$predict #CHECK
-  confusionMatrixTypes <- confusionMatrix(realTypes,predictedTypes)
+  confusionMatrixTypes <- table(predictedTypes,realTypes)
   print(confusionMatrixTypes)
   
   stackRequest <- list()
   stackRequest$data_collected <- data_collected
   stackRequest$predictingSet <- predictingSet
-  stackRequest$predictionsDone <- predictionsDone
-  stackRequest$confusionMatrixTypes <- confusionMatrixTypes
+  # stackRequest$predictionsDone <- predictionsDone
+  # stackRequest$confusionMatrixTypes <- confusionMatrixTypes
   
   return(stackRequest)
 }

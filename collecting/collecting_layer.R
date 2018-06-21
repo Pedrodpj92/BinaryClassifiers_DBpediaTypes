@@ -29,7 +29,7 @@ source(paste(getwd(),"/collecting/fromSPARQL/query_funs.R",sep=""))
 
 collecting_layer <- function(positiveClass, numberPositiveCases,
                              negativeClasses, numberNegativeCases,
-                             urlEndpoint, queryLimit){
+                             urlEndpoint, queryLimit,domain_propertiesURI=NULL){
   
   
   #Estos e deberia comprobar en las funciones, cuando se puede comprobar que es un entero, no una lista
@@ -42,46 +42,116 @@ collecting_layer <- function(positiveClass, numberPositiveCases,
     stop(paste0("Error, numberOfRequest should be greater than 0: ",numberOfRequest), call.=FALSE)  
   }
   
-  #about resources
-  positive_types <- ask_resources(positiveClass, 0, numberPositiveCases, urlEndpoint, queryLimit)
-  
   if(length(numberNegativeCases)!=length(negativeClasses)){
     stop(paste0("Error, numberNegativeCases and negativeClasses should have the same number of elements: ",
                 numberNegativeCases," // ",negativeClasses), call.=FALSE)
   }
   
+  positiveDataFound <- ask_res_and_prop_fromType(positiveClass,numberPositiveCases,urlEndpoint,queryLimit,domain_propertiesURI)
+  positive_types <- positiveDataFound[[1]]
+  positive_properties <- positiveDataFound[[2]]
   
-  negative_types <- vector("list",length(numberNegativeCases))
-  # for(i in 1:length(numberNegativeCases)){
-  #   negative_types[[i]] <- ask_resources(negativeClasses[[i]], 0, numberNegativeCases[[i]], urlEndpoint, queryLimit)
-  #   negative_properties[[i]] <- ask_properties(negative_types[[i]], urlEndpoint, queryLimit) 
+  # before wrap in ask_res_and_prop_fromType
+  # resources_offset <- 0
+  # needsContinue <- TRUE
+  # currentPositiveCases <- numberPositiveCases
+  # 
+  # stackedPosResources <- data.frame(t(c("s","p","o")))
+  # colnames(stackedPosResources) <- c("s","p","o")
+  # 
+  # stackedPosProperties <- data.frame(t(c("s","p")))
+  # colnames(stackedPosProperties) <- c("s","p")
+  # 
+  # while(needsContinue){
+  #   
+  #   positive_types <- ask_resources(positiveClass, resources_offset, currentPositiveCases, urlEndpoint, queryLimit)
+  #   resources_found <- nrow(positive_types)
+  #   positive_types$s <- as.character(positive_types$s)
+  #   positive_types$s <- as.factor(positive_types$s)
+  #   
+  #   if(resources_found>1){
+  #     resources_offset <- resources_offset+resources_found
+  #     positive_properties <- ask_properties(positive_types, urlEndpoint, queryLimit)
+  #     
+  #     if(!is.null(domain_propertiesURI)){
+  #       positive_properties <- positive_properties[grep(domain_propertiesURI,positive_properties[,2]),]
+  #     }
+  #     
+  #     positive_properties$s <- as.character(positive_properties$s)
+  #     positive_properties$s <- as.factor(positive_properties$s)
+  #     
+  #     remainingPosResources <- positive_types[positive_types$s %in% positive_properties$s,]
+  #     
+  #     stackedPosResources <- rbind(stackedPosResources,remainingPosResources)
+  #     stackedPosProperties <- rbind(stackedPosProperties,positive_properties)
+  #     
+  #     if(nrow(stackedPosResources)>=numberPositiveCases){
+  #       needsContinue <- FALSE
+  #       
+  #     }else{
+  #       currentPositiveCases <- currentPositiveCases-nrow(remainingPosResources)
+  #       print("some resources had not proper properties, so new resources will be requested")
+  #     }
+  #     
+  #   }else{
+  #     stop(paste0("Error, resources with positive Class ",positiveClass," have not been found"), call.=FALSE)
+  #   }
+  #   
+  # }
+  # positive_types <- positive_types[-1,]
+  # positive_types <- stackedPosResources
+  # positive_types$s <- as.character(positive_types$s)
+  # positive_types$s <- as.factor(positive_types$s)
+  # positive_properties <- positive_properties[-1,]
+  # positive_properties <- stackedPosProperties
+  # positive_properties$s <- as.character(positive_properties$s)
+  # positive_properties$s <- as.factor(positive_properties$s)
+  
+  
+  #about resources, old version, now we need to iterate about new resources in order to get enought
+  #with proper properties
+  # positive_types <- ask_resources(positiveClass, 0, numberPositiveCases, urlEndpoint, queryLimit)
+  # 
+  # if(nrow(positive_types)>1){
+  #   positive_properties <- ask_properties(positive_types, urlEndpoint, queryLimit)
+  # }else{
+  #   stop(paste0("Error, resources with positive Class ",positiveClass," have not been found"), call.=FALSE)
   # }
   
-  #this loop is divided in order to retrieve all resources first, in case of there would be some problem on them
+  
+  
+  negative_types <- vector("list",length(numberNegativeCases))
+  negative_properties <- vector("list",length(numberNegativeCases))
+  
+  
+  negative_offsets_types <- length(numberNegativeCases)
+  negative_offsets_types <- rep(0, negative_offsets_types)#initialize each offset to request resources
+  negativeDataFound <- vector("list",length(numberNegativeCases))
+  
   for(i in 1:length(numberNegativeCases)){
     print(paste0("let's ask ",numberNegativeCases[[i]]," resources about ",negativeClasses[[i]]," type"))
-    # print(paste0("other parameter queryLimit: ",queryLimit))
-    negative_types[[i]] <- ask_resources(negativeClasses[[i]], 0, numberNegativeCases[[i]], urlEndpoint, queryLimit)
+    negativeDataFound[[i]] <- ask_res_and_prop_fromType(negativeClasses[[i]],numberNegativeCases[[i]],
+                                                        urlEndpoint,queryLimit,domain_propertiesURI)
+    negative_types[[i]] <- negativeDataFound[[i]][[1]]
+    negative_properties[[i]] <- negativeDataFound[[i]][[2]]
   }
   
-  #about properties
-  # positive_properties <- ask_properties(positiveClass, numberPositiveCases, urlEndpoint, queryLimit) #OLD version
-  if(nrow(positive_types)>1){
-    positive_properties <- ask_properties(positive_types, urlEndpoint, queryLimit)
-  }else{
-    stop(paste0("Error, resources with positive Class ",positiveClass," have not been found"), call.=FALSE)
-  }
-  
-  
-  negative_properties <- vector("list",length(numberNegativeCases))
-  for(i in 1:length(numberNegativeCases)){
-    if(nrow(negative_types[[i]])>1){
-      negative_properties[[i]] <- ask_properties(negative_types[[i]], urlEndpoint, queryLimit) 
-    }else{
-      warning(paste0("Warning, resources with negative Class ",negativeClasses[[i]]," have not been found. ",
-                     "Would be enought with the rest of negative cases? Please, considerer it"))
-    }
-  }
+  #Currently using previous function, cannot review all resources before properties, but enought resources can be reached now when
+  #not proper properties are found from resources
+  #this loop is divided in order to retrieve all resources first, in case of there would be some problem on them
+  # for(i in 1:length(numberNegativeCases)){
+  #   print(paste0("let's ask ",numberNegativeCases[[i]]," resources about ",negativeClasses[[i]]," type"))
+  #   negative_types[[i]] <- ask_resources(negativeClasses[[i]], 0, numberNegativeCases[[i]], urlEndpoint, queryLimit)
+  # }
+  # #about properties
+  # for(i in 1:length(numberNegativeCases)){
+  #   if(nrow(negative_types[[i]])>1){
+  #     negative_properties[[i]] <- ask_properties(negative_types[[i]], urlEndpoint, queryLimit) 
+  #   }else{
+  #     warning(paste0("Warning, resources with negative Class ",negativeClasses[[i]]," have not been found. ",
+  #                    "Would be enought with the rest of negative cases? Please, considerer it"))
+  #   }
+  # }
   
   # queryResults <- vector("list",4)
   queryResults <- list()
@@ -98,9 +168,6 @@ collecting_layer <- function(positiveClass, numberPositiveCases,
 }
 
 
-# collecting_layer_prediction_experiments <- function(){
-#   
-# }
 
 
 
