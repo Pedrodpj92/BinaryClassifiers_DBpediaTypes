@@ -11,7 +11,6 @@ get_sparqlData_and_Preprocess <- function(positiveClass, numberPositiveCases,
                                           negativeClasses, numberNegativeCases,
                                           urlEndpoint, queryLimit,
                                           domain_propertiesURI=NULL){
-  print(paste0("pero que estoy teniendo en el valor de domain_propertiesURI: ", domain_propertiesURI))
   
   data_collected <- collecting_layer(positiveClass, numberPositiveCases,
                                      negativeClasses, numberNegativeCases,
