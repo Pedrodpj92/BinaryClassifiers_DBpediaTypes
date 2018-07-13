@@ -27,13 +27,13 @@ acc_rf_testingHvsP_ES
 
 ##amoldar dataset original
 # dt_learning <- ex3_features_holiday_all_es_201610
-# dt_learning <- ex3_features_holiday_all_en_201610
+dt_learning <- ex3_features_holiday_all_en_201610
 
 # dt_learning <- ex1_features_holiday_person_es_201610
 # dt_learning <- ex2_features_holiday_person_event_es_201610
 
 # dt_learning <- ex1_features_holiday_person_en_201610
-dt_learning <- ex2_features_holiday_person_event_en_201610
+# dt_learning <- ex2_features_holiday_person_event_en_201610
 
 
 dt_learning <- cbind(dt_learning[,2:ncol(dt_learning)],dt_learning[,1])

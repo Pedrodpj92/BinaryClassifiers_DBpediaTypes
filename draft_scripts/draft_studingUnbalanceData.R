@@ -1,6 +1,6 @@
 
-load("~/R_proyectos/BinaryClassifiers_DBpediaTypes/inputData/Es201610/data_exp1_Holiday_vs_10kPerson_Es201610.RData")
-# load("~/R_proyectos/BinaryClassifiers_DBpediaTypes/inputData/Es201610/data_exp2_811Holiday_vs_10kPersonAndEvent_Es201610.RData")
+# load("~/R_proyectos/BinaryClassifiers_DBpediaTypes/inputData/Es201610/data_exp1_Holiday_vs_10kPerson_Es201610.RData")
+load("~/R_proyectos/BinaryClassifiers_DBpediaTypes/inputData/Es201610/data_exp2_811Holiday_vs_10kPersonAndEvent_Es201610.RData")
 # load("~/R_proyectos/BinaryClassifiers_DBpediaTypes/inputData/En201610/data_exp1_Holiday_vs_Person_10kEn201610.RData")
 
 source(paste(getwd(),"/modeling/model_funs.R",sep=""))

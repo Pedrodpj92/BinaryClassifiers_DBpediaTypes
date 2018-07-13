@@ -74,7 +74,7 @@ ask_resources <- function(classType, offsetInitial, numberRequest, urlEndpoint, 
     Sys.sleep(1)#endpoint common particularities
   }
   
-
+  
   
   #deleting first dummy row
   dt_auxiliar <- dt_auxiliar[-1,]
@@ -106,10 +106,10 @@ ask_resources <- function(classType, offsetInitial, numberRequest, urlEndpoint, 
       dt_results_reduced <- dt_results_reduced[!(grepl(dropOut_problematiChars[i],dt_results_reduced[,1], fixed = TRUE)),]
     }
   }
-
+  
   
   if(nrow(dt_results_reduced)<nrow(dt_results) && nrow(dt_results_reduced)>0){#recursive function, in order to obtain the exact
-
+    
     # print("")
     # print(paste0("les do some recursivity..."))
     # print("")
@@ -145,7 +145,7 @@ ask_properties_perResource <- function(resource, urlEndpoint, queryLimit){
   }
   
   queryLimit <- round(queryLimit)
- 
+  
   invalidCharacters <- c('%')#problems if we would have to add a whole japanise dictionary for example
   print(resource)
   # if(!invalidCharacteresFound){
@@ -173,6 +173,7 @@ ask_properties_perResource <- function(resource, urlEndpoint, queryLimit){
       i <- i+1
       # print(paste0("ending iteration pagination query ",i))
       Sys.sleep(1)#endpoint common particularities and limitations
+      # Sys.sleep(2)
     }
     dt_auxiliar <- dt_auxiliar[-1,]
     dt_results <- dt_auxiliar
@@ -208,8 +209,29 @@ ask_properties_iterative <- function(dt_resources, urlEndpoint, queryLimit){
   for(i in 1:nrow(dt_resources)){
     print(paste0("resource number ",i))
     if(!is.na(dt_resources[i,1])){
-      dt_auxiliar <- rbind(dt_auxiliar,
-                           ask_properties_perResource(as.character(dt_resources[i,1]),urlEndpoint,queryLimit))
+      
+      # dt_auxiliar <- rbind(dt_auxiliar,
+      #                      ask_properties_perResource(as.character(dt_resources[i,1]),urlEndpoint,queryLimit))
+      
+      dt_auxiliar <- tryCatch(
+        {
+          #try zone
+          rbind(dt_auxiliar,
+                ask_properties_perResource(as.character(dt_resources[i,1]),urlEndpoint,queryLimit))
+        },
+        # warning=function(){
+        
+        # },#we are interested on errors,
+        error=function(){
+          print("connection failure, trying to run again")
+          rbind(dt_auxiliar,
+                ask_properties_perResource(as.character(dt_resources[i,1]),urlEndpoint,queryLimit))
+        },
+        finally={
+          #nothing
+        }
+      )
+      
     }
   }
   dt_auxiliar <- dt_auxiliar[-1,]
@@ -382,10 +404,11 @@ ask_properties_perResource_OLD_retrievingObjects <- function(resource, urlEndpoi
 
 
 ask_res_and_prop_fromType <- function(typeClass,numberCases,
-                                      urlEndpoint,queryLimit,domain_propertiesURI){
+                                      urlEndpoint,queryLimit,domain_propertiesURI,
+                                      initialResourceOffset=0){
   
   
-  resources_offset <- 0
+  resources_offset <- initialResourceOffset
   needsContinue <- TRUE
   currentNumberCases <- numberCases
   

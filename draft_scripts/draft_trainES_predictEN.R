@@ -18,7 +18,7 @@ dt_predicting <- adaptColumns_DT2_like_DT1(dt1In = dt_training, dt2In = dt_predi
 
 
 rf_es201610 <- simpleRandomForest(dt_data = dt_training,
-                                  name_model = "rf_HvsSFL_Es201610",
+                                  name_model = "rf_HvsSFL_Es201610_originalData",
                                   id_model = "_1_",path_model = "modelsAlone/",randomSeed = 1234)
 
 
@@ -28,7 +28,7 @@ rf_es201610 <- simpleRandomForest(dt_data = dt_training,
 h2o.init(
   nthreads=-1
 )
-carga_rf_es201610 <- h2o.loadModel(path = paste0(getwd(),"/modelsAlone/","rf_HvsSFL_Es201610__1__1234"))
+carga_rf_es201610 <- h2o.loadModel(path = paste0(getwd(),"/modelsAlone/","rf_HvsSFL_Es201610_originalData__1__1234"))
 
 predicting <- as.h2o(dt_predicting)
 rf_predictions <- h2o.predict(carga_rf_es201610,predicting[,c(2:ncol(predicting))])

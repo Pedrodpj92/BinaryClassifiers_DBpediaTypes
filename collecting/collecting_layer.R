@@ -29,7 +29,8 @@ source(paste(getwd(),"/collecting/fromSPARQL/query_funs.R",sep=""))
 
 collecting_layer <- function(positiveClass, numberPositiveCases,
                              negativeClasses, numberNegativeCases,
-                             urlEndpoint, queryLimit,domain_propertiesURI=NULL){
+                             urlEndpoint, queryLimit,domain_propertiesURI=NULL,
+                             initialResourceOffset=0){
   
   
   #Estos e deberia comprobar en las funciones, cuando se puede comprobar que es un entero, no una lista
@@ -47,7 +48,9 @@ collecting_layer <- function(positiveClass, numberPositiveCases,
                 numberNegativeCases," // ",negativeClasses), call.=FALSE)
   }
   
-  positiveDataFound <- ask_res_and_prop_fromType(positiveClass,numberPositiveCases,urlEndpoint,queryLimit,domain_propertiesURI)
+  positiveDataFound <- ask_res_and_prop_fromType(positiveClass,
+                                                 numberPositiveCases,
+                                                 urlEndpoint,queryLimit,domain_propertiesURI)
   positive_types <- positiveDataFound[[1]]
   positive_properties <- positiveDataFound[[2]]
   

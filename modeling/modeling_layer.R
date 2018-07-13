@@ -5,7 +5,7 @@ source(paste(getwd(),"/modeling/model_funs.R",sep=""))
 
 #for now, only is used random forest with cross-validation 10 fold, but it can change
 modeling_layer <- function(dt_learning, numberPositiveCases=NULL, numberNegativeCases=NULL,
-                           name_algorithm, name_model, id_model, path_model, randomSeed){
+                           name_algorithm="RF_H2O", name_model, id_model, path_model, randomSeed){
   #to-do:check if dt_learning is data frame type and id_model is integer type
   
   #in case of interest of study inbalance cases, number of positive/negative could be chosen here
@@ -22,7 +22,7 @@ modeling_layer <- function(dt_learning, numberPositiveCases=NULL, numberNegative
   #   if(name_algorithm == available_models$RF_H2O){
   #     # trainedModel <- simpleRandomForest(dt_learning, name_model, id_model, path_model, randomSeed)
   #   }
-  switch (name_algoritm,
+  switch (name_algorithm,
           RF_H2O={
             print("using Random Forest")
             trainedModel <- simpleRandomForest(dt_learning, name_model, id_model, path_model, randomSeed)
